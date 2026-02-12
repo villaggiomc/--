@@ -1,518 +1,241 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-    <title>My Private Dash Game</title>
+    <meta charset="UTF-8">
+    <title>Private Dash - Game Edition</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #1a1a2e; /* Sfondo scuro ispirato a GD */
-            color: #e0e0e0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            overflow: hidden;
+        :root { --primary: #8e2de2; --secondary: #4a00e0; }
+        body { 
+            margin: 0; background: #050510; color: white; 
+            font-family: 'Segoe UI', Arial, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; 
         }
-
-        h1, h2 {
-            color: #bbbbff;
-            text-shadow: 0 0 5px #8888ff;
+        #ui-layer { text-align: center; z-index: 10; }
+        .menu-box { background: rgba(20, 20, 40, 0.95); padding: 30px; border-radius: 20px; box-shadow: 0 0 30px rgba(0,0,0,0.8); border: 1px solid var(--primary); }
+        .level-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-top: 20px; }
+        button { 
+            background: linear-gradient(45deg, var(--primary), var(--secondary)); border: none; color: white; 
+            padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s;
         }
-
-        #password-screen {
-            background: #2a2a4a;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            text-align: center;
+        button:hover { transform: scale(1.1); box-shadow: 0 0 15px var(--primary); }
+        input[type="password"], input[type="color"], select { 
+            padding: 10px; border-radius: 5px; border: 1px solid #444; background: #111; color: white; margin: 10px;
         }
-
-        #password-input {
-            padding: 10px;
-            margin: 15px 0;
-            border: none;
-            border-radius: 5px;
-            background: #3a3a5a;
-            color: #e0e0e0;
-            font-size: 1em;
+        canvas { 
+            display: none; background: #0a0a1a; border-bottom: 4px solid #fff; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
         }
-
-        #password-input::placeholder {
-            color: #aaaaaa;
-        }
-
-        button {
-            background: #6a05ad; /* Colore pulsante GD-like */
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: background 0.3s ease;
-        }
-
-        button:hover {
-            background: #8e2de2;
-        }
-
-        #game-container {
-            display: none; /* Nascondi finché non si accede */
-            background: #2a2a4a;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        #home-screen {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        #player-preview {
-            width: 80px;
-            height: 80px;
-            border: 2px solid #bbb;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .player-shape {
-            width: 60px;
-            height: 60px;
-            background-color: lightblue; /* Colore di default */
-            transition: all 0.2s ease-in-out;
-        }
-
-        #customization-controls {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        #customization-controls label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        #customization-controls input[type="color"],
-        #customization-controls select {
-            padding: 5px;
-            border: 1px solid #555;
-            border-radius: 3px;
-            background: #3a3a5a;
-            color: #e0e0e0;
-            font-size: 0.9em;
-            cursor: pointer;
-        }
-
-        #customization-controls input[type="color"] {
-            height: 35px;
-            width: 80px;
-        }
-
-        #level-selection {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-
-        .level-button {
-            background: #4a148c;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.5em;
-            font-weight: bold;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background 0.3s ease, transform 0.2s ease;
-        }
-
-        .level-button:hover {
-            background: #6a05ad;
-            transform: scale(1.05);
-        }
-
-        .level-button.locked {
-            background: #333;
-            color: #777;
-            cursor: not-allowed;
-        }
-
-        #game-screen {
-            display: none; /* Nascondi finché non si inizia un livello */
-            position: relative;
-            margin-top: 20px;
-        }
-
-        canvas {
-            background: linear-gradient(to bottom, #0d0d1e, #1a1a2e); /* Sfondo del gioco */
-            border: 3px solid #6a05ad;
-            border-radius: 5px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        #game-controls {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-
-        #game-message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2em;
-            color: #ff0077;
-            text-shadow: 0 0 10px #ff0077;
-            display: none;
-        }
+        .stats { position: absolute; top: 20px; left: 20px; font-size: 18px; display: none; }
     </style>
 </head>
 <body>
-    <div id="password-screen">
-        <h2>Accesso al Mio Gioco Privato</h2>
-        <input type="password" id="password-input" placeholder="Inserisci la password">
-        <button onclick="checkPassword()">Accedi</button>
-    </div>
 
-    <div id="game-container">
-        <h1>My Private Dash Game</h1>
-
-        <div id="home-screen">
-            <h2>Personalizza il tuo Dash!</h2>
-            <div id="player-preview">
-                <div id="player-shape" class="player-shape"></div>
-            </div>
-
-            <div id="customization-controls">
-                <div>
-                    <label for="player-color">Colore:</label>
-                    <input type="color" id="player-color" value="#00ffff">
-                </div>
-                <div>
-                    <label for="player-shape-select">Forma:</label>
-                    <select id="player-shape-select">
-                        <option value="square">Quadrato</option>
-                        <option value="circle">Cerchio</option>
-                        <option value="triangle">Triangolo</option>
-                    </select>
-                </div>
-            </div>
-
-            <h2>Seleziona Livello</h2>
-            <div id="level-selection">
-                </div>
+    <div id="ui-layer">
+        <div id="pass-screen" class="menu-box">
+            <h1>ACCESSO RISERVATO</h1>
+            <p>Inserisci la chiave per giocare</p>
+            <input type="password" id="password" placeholder="Password...">
+            <button onclick="checkPass()">ENTRA</button>
         </div>
 
-        <div id="game-screen">
-            <canvas id="gameCanvas" width="800" height="400"></canvas>
-            <div id="game-message"></div>
-            <div id="game-controls">
-                <button onclick="exitToHome()">Torna alla Home</button>
+        <div id="menu-screen" class="menu-box" style="display:none;">
+            <h1>MY DASH</h1>
+            <div style="background: #1a1a3a; padding: 15px; border-radius: 10px;">
+                <label>Colore:</label> <input type="color" id="pColor" value="#00ffff">
+                <label>Icona:</label> 
+                <select id="pShape">
+                    <option value="square">Cubo Classico</option>
+                    <option value="circle">Palla Rotante</option>
+                </select>
             </div>
+            <h3>SELEZIONA DIFFICOLTÀ</h3>
+            <div class="level-grid" id="levels"></div>
         </div>
     </div>
 
-    <script>
-        // --- Impostazioni Generali ---
-        const ACCESS_PASSWORD = "ciaoxd"; // CAMBIA QUESTA PASSWORD!
-        const CANVAS_WIDTH = 800;
-        const CANVAS_HEIGHT = 400;
+    <div id="game-info" class="stats">LIVELLO: <span id="lvl-num">1</span></div>
+    <canvas id="gameCanvas" width="900" height="400"></canvas>
 
-        // --- Elementi DOM ---
-        const passwordScreen = document.getElementById("password-screen");
-        const passwordInput = document.getElementById("password-input");
-        const gameContainer = document.getElementById("game-container");
-        const homeScreen = document.getElementById("home-screen");
-        const gameScreen = document.getElementById("game-screen");
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
-        const playerPreview = document.getElementById("player-preview");
-        const playerShapeElement = document.getElementById("player-shape");
-        const playerColorInput = document.getElementById("player-color");
-        const playerShapeSelect = document.getElementById("player-shape-select");
-        const levelSelectionDiv = document.getElementById("level-selection");
-        const gameMessage = document.getElementById("game-message");
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    // --- CONFIGURAZIONE ---
+    const PASS_SEGRETA = "game"; // Cambiala pure qui
+    let gameActive = false;
+    let score = 0;
+    
+    const player = {
+        x: 100, y: 340, w: 40, h: 40,
+        dy: 0, gravity: 0.9, jump: -15,
+        ground: 340, rot: 0, isJumping: false,
+        color: "#00ffff", shape: "square"
+    };
 
-        // --- Variabili di Gioco ---
-        let player = {
-            x: 50,
-            y: CANVAS_HEIGHT - 60, // Sopra il terreno
-            width: 40,
-            height: 40,
-            color: playerColorInput.value,
-            shape: playerShapeSelect.value,
-            velocityY: 0,
-            gravity: 0.8,
-            jumpStrength: -15,
-            isJumping: false,
-            initialY: CANVAS_HEIGHT - 60 // Posizione iniziale sul terreno
-        };
+    // Generazione 10 Livelli: velocità crescente e ostacoli più densi
+    const levels = Array.from({length: 10}, (_, i) => ({
+        speed: 7 + (i * 1.5),
+        gap: 400 - (i * 20),
+        count: 10 + (i * 5)
+    }));
 
-        let currentLevelIndex = 0;
-        let gameRunning = false;
-        let obstacles = [];
-        let gameSpeed = 5; // Velocità di scorrimento del livello
+    let obstacles = [];
 
-        // --- Livelli (Molto semplificati!) ---
-        // Ogni array rappresenta un livello e contiene ostacoli.
-        // x: posizione iniziale dell'ostacolo dal bordo destro (per farlo apparire)
-        // width: larghezza ostacolo
-        // height: altezza ostacolo
-        // type: 'spike' o 'block' (non ancora implementati visivamente, ma è un'idea)
+    function checkPass() {
+        if(document.getElementById("password").value === PASS_SEGRETA) {
+            document.getElementById("pass-screen").style.display = "none";
+            document.getElementById("menu-screen").style.display = "block";
+            buildLevelMenu();
+        } else { alert("Accesso Negato"); }
+    }
 
-        const levels = [
-            // Livello 1: Facile
-            [{ x: 300, width: 40, height: 40 }, { x: 500, width: 40, height: 40 }],
-            // Livello 2: Un po' più difficile
-            [{ x: 300, width: 40, height: 40 }, { x: 550, width: 30, height: 60 }],
-            // Livello 3: Salti più precisi
-            [{ x: 300, width: 40, height: 40 }, { x: 450, width: 40, height: 40 }, { x: 600, width: 40, height: 40 }],
-            // ... Altri 7 livelli da definire ...
-            // Esempio di un livello più avanzato (concettuale)
-            [{ x: 200, width: 30, height: 30 }, { x: 350, width: 20, height: 50 }, { x: 500, width: 40, height: 40 }, { x: 650, width: 30, height: 30 }],
-            // Puoi aggiungere altre proprietà agli ostacoli per variare altezza, gap, ecc.
-        ];
-
-        // --- Funzioni di Interfaccia Utente ---
-
-        function checkPassword() {
-            if (passwordInput.value === ACCESS_PASSWORD) {
-                passwordScreen.style.display = "none";
-                gameContainer.style.display = "block";
-                renderPlayerPreview();
-                generateLevelButtons();
-            } else {
-                alert("Password errata!");
-                passwordInput.value = "";
-            }
-        }
-
-        function renderPlayerPreview() {
-            playerShapeElement.style.backgroundColor = player.color;
-            playerShapeElement.style.borderRadius = player.shape === "circle" ? "50%" : "0";
-            if (player.shape === "triangle") {
-                playerShapeElement.style.backgroundColor = "transparent";
-                playerShapeElement.style.borderLeft = "30px solid transparent";
-                playerShapeElement.style.borderRight = "30px solid transparent";
-                playerShapeElement.style.borderBottom = `60px solid ${player.color}`;
-                playerShapeElement.style.width = "0";
-                playerShapeElement.style.height = "0";
-            } else {
-                 playerShapeElement.style.border = "none"; // Rimuovi border per forme non triangolari
-                 playerShapeElement.style.width = "60px";
-                 playerShapeElement.style.height = "60px";
-            }
-        }
-
-        function generateLevelButtons() {
-            levelSelectionDiv.innerHTML = ''; // Pulisci i pulsanti esistenti
-            for (let i = 0; i < levels.length; i++) {
-                const button = document.createElement("div");
-                button.className = "level-button";
-                button.textContent = (i + 1).toString();
-                // Puoi aggiungere logica di sblocco qui, per ora sono tutti sbloccati
-                button.onclick = () => startGame(i);
-                levelSelectionDiv.appendChild(button);
-            }
-        }
-
-        playerColorInput.addEventListener("input", (e) => {
-            player.color = e.target.value;
-            renderPlayerPreview();
+    function buildLevelMenu() {
+        const container = document.getElementById("levels");
+        levels.forEach((l, i) => {
+            const btn = document.createElement("button");
+            btn.innerText = i + 1;
+            btn.onclick = () => start(i);
+            container.appendChild(btn);
         });
+    }
 
-        playerShapeSelect.addEventListener("change", (e) => {
-            player.shape = e.target.value;
-            renderPlayerPreview();
-        });
-
-        // --- Funzioni di Gioco ---
-
-        function startGame(levelIndex) {
-            currentLevelIndex = levelIndex;
-            homeScreen.style.display = "none";
-            gameScreen.style.display = "block";
-            gameMessage.style.display = "none";
-
-            // Reset del giocatore e degli ostacoli
-            player.x = 50;
-            player.y = player.initialY;
-            player.velocityY = 0;
-            player.isJumping = false;
-
-            obstacles = [];
-            // Carica gli ostacoli per il livello corrente, posizionandoli a destra del canvas
-            if (levels[currentLevelIndex]) {
-                levels[currentLevelIndex].forEach(obsData => {
-                    obstacles.push({
-                        x: CANVAS_WIDTH + obsData.x, // Appaiono fuori dallo schermo
-                        y: CANVAS_HEIGHT - obsData.height, // Sul terreno
-                        width: obsData.width,
-                        height: obsData.height,
-                        color: "#00ff00" // Colore ostacolo di default
-                    });
-                });
-            }
-
-            gameRunning = true;
-            gameLoop(); // Avvia il ciclo di gioco
-        }
-
-        function exitToHome() {
-            gameRunning = false;
-            homeScreen.style.display = "flex";
-            gameScreen.style.display = "none";
-            renderPlayerPreview(); // Aggiorna la preview se il player è cambiato
-        }
-
-        function drawPlayer() {
-            ctx.fillStyle = player.color;
-            if (player.shape === "circle") {
-                ctx.beginPath();
-                ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width / 2, 0, Math.PI * 2);
-                ctx.fill();
-            } else if (player.shape === "triangle") {
-                ctx.beginPath();
-                ctx.moveTo(player.x + player.width / 2, player.y);
-                ctx.lineTo(player.x + player.width, player.y + player.height);
-                ctx.lineTo(player.x, player.y + player.height);
-                ctx.closePath();
-                ctx.fill();
-            } else { // square
-                ctx.fillRect(player.x, player.y, player.width, player.height);
-            }
-        }
-
-        function drawObstacles() {
-            ctx.fillStyle = "#ff0000"; // Colore ostacolo
-            obstacles.forEach(obs => {
-                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+    function start(idx) {
+        player.color = document.getElementById("pColor").value;
+        player.shape = document.getElementById("pShape").value;
+        player.y = player.ground;
+        player.dy = 0;
+        player.rot = 0;
+        
+        document.getElementById("ui-layer").style.display = "none";
+        document.getElementById("game-info").style.display = "block";
+        document.getElementById("lvl-num").innerText = idx + 1;
+        canvas.style.display = "block";
+        
+        // Genera Mappa
+        const config = levels[idx];
+        obstacles = [];
+        for(let j = 0; j < config.count; j++) {
+            obstacles.push({
+                x: 1000 + (j * config.gap) + (Math.random() * 100),
+                w: 35, h: 45
             });
         }
+        
+        gameActive = true;
+        speed = config.speed;
+        update();
+    }
 
-        function updateGame() {
-            // Movimento del giocatore (gravità e salto)
-            player.velocityY += player.gravity;
-            player.y += player.velocityY;
+    function drawPlayer() {
+        ctx.save();
+        // Centro della rotazione sul personaggio
+        ctx.translate(player.x + player.w/2, player.y + player.h/2);
+        ctx.rotate(player.rot * Math.PI / 180);
+        
+        ctx.fillStyle = player.color;
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = player.color;
 
-            // Collisione con il terreno
-            if (player.y > player.initialY) {
-                player.y = player.initialY;
-                player.velocityY = 0;
-                player.isJumping = false;
-            }
-
-            // Movimento degli ostacoli
-            obstacles.forEach(obs => {
-                obs.x -= gameSpeed;
-            });
-
-            // Rimuovi ostacoli fuori schermo
-            obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
-
-            // Controlla collisioni
-            checkCollisions();
-
-            // Controlla vittoria del livello (quando non ci sono più ostacoli)
-            if (obstacles.length === 0 && levels[currentLevelIndex] && gameRunning) {
-                gameRunning = false;
-                gameMessage.textContent = `Livello ${currentLevelIndex + 1} Completato!`;
-                gameMessage.style.color = "#00ff00";
-                gameMessage.style.display = "block";
-                // Potresti sbloccare il prossimo livello qui e tornare alla home
-            }
-        }
-
-        function checkCollisions() {
-            obstacles.forEach(obs => {
-                if (
-                    player.x < obs.x + obs.width &&
-                    player.x + player.width > obs.x &&
-                    player.y < obs.y + obs.height &&
-                    player.y + player.height > obs.y
-                ) {
-                    // Collisione! Il giocatore ha perso.
-                    gameOver();
-                }
-            });
-        }
-
-        function gameOver() {
-            gameRunning = false;
-            gameMessage.textContent = "Game Over!";
-            gameMessage.style.color = "#ff0077";
-            gameMessage.style.display = "block";
-        }
-
-        function jump() {
-            if (!player.isJumping) {
-                player.velocityY = player.jumpStrength;
-                player.isJumping = true;
-            }
-        }
-
-        // --- Ciclo di Gioco ---
-        function gameLoop() {
-            if (!gameRunning) return;
-
-            ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT); // Pulisci il canvas
-
-            // Disegna il terreno (linea per semplicità)
-            ctx.strokeStyle = "#4CAF50";
-            ctx.lineWidth = 4;
+        if(player.shape === "square") {
+            ctx.fillRect(-player.w/2, -player.h/2, player.w, player.h);
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-player.w/2, -player.h/2, player.w, player.h);
+        } else {
             ctx.beginPath();
-            ctx.moveTo(0, CANVAS_HEIGHT - 20);
-            ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT - 20);
+            ctx.arc(0, 0, player.w/2, 0, Math.PI*2);
+            ctx.fill();
             ctx.stroke();
+        }
+        ctx.restore();
+    }
 
-            updateGame();
-            drawObstacles();
-            drawPlayer();
+    function update() {
+        if(!gameActive) return;
 
-            requestAnimationFrame(gameLoop); // Richiama gameLoop per il prossimo frame
+        // Pulizia e Sfondo
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Effetto scorrimento pavimento
+        ctx.strokeStyle = "#333";
+        for(let i=0; i<20; i++) {
+            ctx.beginPath();
+            ctx.moveTo((i*50 - (Date.now()/10 % 50)), 385);
+            ctx.lineTo((i*50 - (Date.now()/10 % 50)) + 20, 385);
+            ctx.stroke();
         }
 
-        // --- Gestione Input ---
-        document.addEventListener("keydown", (e) => {
-            if (gameRunning && e.code === "Space") {
-                jump();
+        // Fisica
+        player.dy += player.gravity;
+        player.y += player.dy;
+
+        if(player.y >= player.ground) {
+            player.y = player.ground;
+            player.dy = 0;
+            player.isJumping = false;
+            // Snapping rotazione al multiplo di 90 più vicino (effetto atterraggio perfetto)
+            player.rot = Math.round(player.rot / 90) * 90;
+        } else {
+            // Rotazione continua durante il salto
+            player.rot += 6; 
+        }
+
+        drawPlayer();
+
+        // Gestione Ostacoli
+        for(let i = obstacles.length - 1; i >= 0; i--) {
+            let o = obstacles[i];
+            o.x -= speed;
+
+            // Disegna Spina (Spike)
+            ctx.fillStyle = "#ff2255";
+            ctx.shadowColor = "#ff2255";
+            ctx.beginPath();
+            ctx.moveTo(o.x, 380);
+            ctx.lineTo(o.x + o.w/2, 380 - o.h);
+            ctx.lineTo(o.x + o.w, 380);
+            ctx.fill();
+
+            // Collisione (Hitbox leggermente più piccola per essere più permissivi)
+            if(player.x + 30 > o.x && player.x < o.x + o.w - 5 && player.y + 35 > 380 - o.h) {
+                gameOver();
             }
-        });
+        }
 
-        canvas.addEventListener("click", () => {
-             if (gameRunning) {
-                jump();
-            }
-        });
+        // Vittoria
+        if(obstacles.length > 0 && obstacles[obstacles.length-1].x < -100) {
+            alert("LIVELLO COMPLETATO!");
+            resetUI();
+        }
 
-        // --- Inizializzazione ---
-        // Al caricamento della pagina, mostra la schermata della password
-        window.onload = () => {
-            passwordScreen.style.display = "block";
-            gameContainer.style.display = "none";
-            playerColorInput.value = player.color; // Assicura che l'input colore abbia il valore iniziale
-        };
+        requestAnimationFrame(update);
+    }
 
-    </script>
+    function jump() {
+        if(!player.isJumping && gameActive) {
+            player.dy = player.jump;
+            player.isJumping = true;
+        }
+    }
+
+    function gameOver() {
+        gameActive = false;
+        alert("Ops! Ritenta.");
+        resetUI();
+    }
+
+    function resetUI() {
+        gameActive = false;
+        canvas.style.display = "none";
+        document.getElementById("game-info").style.display = "none";
+        document.getElementById("ui-layer").style.display = "block";
+        document.getElementById("menu-screen").style.display = "block";
+    }
+
+    // Input
+    window.addEventListener("keydown", (e) => { if(e.code === "Space" || e.code === "ArrowUp") jump(); });
+    canvas.addEventListener("mousedown", jump);
+
+</script>
 </body>
 </html>
