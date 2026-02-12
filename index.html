@@ -2,54 +2,97 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Geometry Dash Privato - Game</title>
+    <title>Geometry Dash Privato - Versione Finale</title>
     <style>
-        :root { --accent: #00ffcc; --bg: #0a0a1a; }
-        body { margin: 0; background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
-        .box { background: rgba(20, 20, 40, 0.9); padding: 30px; border-radius: 15px; border: 2px solid var(--accent); text-align: center; box-shadow: 0 0 20px var(--accent); }
+        :root { 
+            --accent: #00ffcc; 
+            --bg: #050510; 
+            --panel: rgba(20, 20, 40, 0.9); 
+        }
+        body { 
+            margin: 0; background: var(--bg); color: white; 
+            font-family: 'Segoe UI', Tahoma, sans-serif; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            height: 100vh; overflow: hidden; transition: 0.8s ease; 
+        }
+        .box { 
+            background: var(--panel); padding: 30px; border-radius: 20px; 
+            border: 2px solid var(--accent); text-align: center; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.5), 0 0 15px var(--accent); 
+            transition: border-color 0.5s, box-shadow 0.5s;
+        }
         .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 20px 0; }
-        button { background: var(--accent); border: none; color: black; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { transform: scale(1.1); filter: brightness(1.2); }
-        canvas { display: none; background: linear-gradient(to bottom, #0d0d1e, #1a1a2e); border-bottom: 4px solid white; cursor: crosshair; }
+        button { 
+            background: var(--accent); border: none; color: black; 
+            padding: 10px 15px; border-radius: 8px; cursor: pointer; 
+            font-weight: bold; transition: 0.3s; margin: 5px;
+        }
+        button:hover { transform: translateY(-3px); filter: brightness(1.2); }
+        canvas { display: none; background: #0a0a1a; border-bottom: 5px solid white; cursor: crosshair; }
         .hidden { display: none; }
-        #editor-ui { position: absolute; bottom: 20px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; display: none; }
+        #editor-ui { 
+            position: absolute; bottom: 20px; background: rgba(0,0,0,0.85); 
+            padding: 20px; border-radius: 15px; display: none; 
+            text-align: center; border: 1px solid var(--accent); 
+        }
+        .tool-btn { background: #333; color: white; border: 1px solid #555; }
+        .tool-active { background: var(--accent) !important; color: black !important; border: 1px solid white; }
+        input[type="password"] { padding: 10px; border-radius: 5px; border: none; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div id="pass-screen" class="box">
-        <h1>LOGIN PRIVATO</h1>
-        <input type="password" id="pass-input" placeholder="Password..." style="padding:10px; border-radius:5px;">
-        <button onclick="checkPass()">ENTRA</button>
+        <h1>BENVENUTO GAME</h1>
+        <p>Inserisci la chiave d'accesso:</p>
+        <input type="password" id="pass-input" placeholder="Password...">
+        <br>
+        <button onclick="checkPass()">ACCEDI</button>
     </div>
 
     <div id="menu-screen" class="box hidden">
-        <h1>MY DASH EDITOR</h1>
-        <div style="margin: 15px;">
-            Colore: <input type="color" id="pColor" value="#00ffcc">
-            Icona: <select id="pShape"><option value="square">Cubo</option><option value="circle">Palla</option></select>
+        <h1 id="title">MY DASH ENGINE</h1>
+        
+        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+            <label>Colore:</label> <input type="color" id="pColor" value="#00ffcc">
+            <label>Icona:</label> 
+            <select id="pShape" style="padding: 5px; border-radius: 5px;">
+                <option value="square">Cubo</option>
+                <option value="circle">Palla</option>
+            </select>
+            <br><br>
+            <button onclick="customizeSite()" style="background: white; color: black; width: 100%;">PERSONALIZZA SITO</button>
         </div>
-        <h3>LIVELLI PREDEFINITI</h3>
+
+        <h3>LIVELLI ORIGINALI</h3>
         <div class="grid" id="lvl-grid"></div>
-        <hr>
-        <button onclick="openEditor()" style="background: #ffcc00;">MODALITÀ EDITOR</button>
-        <button id="play-custom" onclick="startLevel(-1)" style="display:none; background: #2ecc71;">GIOCA LIVELLO CREATO</button>
+        
+        <hr style="border: 0.5px solid var(--accent); opacity: 0.2; margin: 20px 0;">
+        
+        <button onclick="openEditor()" style="background: #ffaa00;">MODALITÀ EDITOR</button>
+        <button id="play-custom" onclick="startLevel(-1)" style="display:none; background: #2ecc71;">GIOCA IL TUO LIVELLO</button>
     </div>
 
     <canvas id="gameCanvas" width="900" height="400"></canvas>
-    <div id="editor-ui">CLICK SUL PAVIMENTO PER SPINE | INVIO PER TESTARE | ESC PER USCIRE</div>
+
+    <div id="editor-ui">
+        <div style="margin-bottom: 15px;">
+            <button id="tool-spike" class="tool-btn tool-active" onclick="setTool('spike')">SPINA (Morte)</button>
+            <button id="tool-block" class="tool-btn" onclick="setTool('block')">BLOCCO (Piattaforma)</button>
+        </div>
+        <small>CLICK: Piazza/Rimuovi | INVIO: Playtest | ESC: Esci</small>
+    </div>
 
 <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    const passScreen = document.getElementById("pass-screen");
-    const menuScreen = document.getElementById("menu-screen");
     
     let gameActive = false;
     let editorMode = false;
-    let customMap = JSON.parse(localStorage.getItem('gameCustomMap')) || [];
+    let currentTool = 'spike';
+    let customMap = JSON.parse(localStorage.getItem('game_v3_map')) || [];
     let obstacles = [];
-    let currentSpeed = 7;
+    let speed = 8;
 
     const player = {
         x: 100, y: 340, w: 40, h: 40,
@@ -58,18 +101,28 @@
         color: "#00ffcc", shape: "square"
     };
 
-    // Generazione 10 Livelli
+    // Genera 10 livelli automatici
     const levels = Array.from({length: 10}, (_, i) => ({
-        speed: 7 + i,
-        map: Array.from({length: 5 + i}, (_, j) => ({ x: 600 + (j * (450 - (i*20))), w: 30, h: 45 }))
+        speed: 7 + (i * 0.8),
+        map: Array.from({length: 8 + i}, (_, j) => ({
+            x: 600 + (j * (400 - (i*15))),
+            w: 40, h: 45, type: j % 4 === 0 ? 'block' : 'spike'
+        }))
     }));
 
     function checkPass() {
         if(document.getElementById("pass-input").value === "123") {
-            passScreen.classList.add("hidden");
-            menuScreen.classList.remove("hidden");
+            document.getElementById("pass-screen").classList.add("hidden");
+            document.getElementById("menu-screen").classList.remove("hidden");
             initMenu();
-        } else { alert("Password Errata"); }
+        } else { alert("Password Sbagliata!"); }
+    }
+
+    function customizeSite() {
+        const col = document.getElementById("pColor").value;
+        document.documentElement.style.setProperty('--accent', col);
+        document.body.style.background = `radial-gradient(circle at center, ${col}22 0%, #050510 100%)`;
+        alert("Sito Personalizzato!");
     }
 
     function initMenu() {
@@ -81,93 +134,120 @@
             btn.onclick = () => startLevel(i);
             grid.appendChild(btn);
         });
-        if(customMap.length > 0) document.getElementById("play-custom").style.display = "inline-block";
+        document.getElementById("play-custom").style.display = customMap.length > 0 ? "inline-block" : "none";
+    }
+
+    function setTool(t) {
+        currentTool = t;
+        document.getElementById("tool-spike").className = t === 'spike' ? 'tool-btn tool-active' : 'tool-btn';
+        document.getElementById("tool-block").className = t === 'block' ? 'tool-btn tool-active' : 'tool-btn';
     }
 
     function openEditor() {
-        editorMode = true;
-        gameActive = false;
+        editorMode = true; gameActive = false;
         obstacles = [...customMap];
-        menuScreen.classList.add("hidden");
+        document.getElementById("menu-screen").classList.add("hidden");
         canvas.style.display = "block";
         document.getElementById("editor-ui").style.display = "block";
-        renderEditor();
+        drawEditor();
+    }
+
+    function drawEditor() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawBaseLine();
+        obstacles.forEach(o => drawObject(o));
+        // Anteprima player
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = document.getElementById("pColor").value;
+        ctx.fillRect(player.x, player.ground, player.w, player.h);
+        ctx.globalAlpha = 1;
     }
 
     function startLevel(idx) {
-        editorMode = false;
-        gameActive = true;
+        editorMode = false; gameActive = true;
         player.color = document.getElementById("pColor").value;
         player.shape = document.getElementById("pShape").value;
-        player.y = player.ground;
-        player.dy = 0;
-        player.rot = 0;
+        player.y = player.ground; player.dy = 0; player.rot = 0;
 
-        if(idx === -1) {
-            obstacles = JSON.parse(JSON.stringify(customMap));
-            currentSpeed = 8;
-        } else {
-            obstacles = JSON.parse(JSON.stringify(levels[idx].map));
-            currentSpeed = levels[idx].speed;
-        }
+        obstacles = idx === -1 ? JSON.parse(JSON.stringify(customMap)) : JSON.parse(JSON.stringify(levels[idx].map));
+        speed = idx === -1 ? 8 : levels[idx].speed;
 
-        menuScreen.classList.add("hidden");
+        document.getElementById("menu-screen").classList.add("hidden");
+        document.getElementById("editor-ui").style.display = "none";
         canvas.style.display = "block";
-        update();
+        gameLoop();
     }
 
     canvas.addEventListener("mousedown", (e) => {
         if(!editorMode) { jump(); return; }
         const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
+        const mx = e.clientX - rect.left;
+        const index = obstacles.findIndex(o => Math.abs(o.x - mx) < 30);
         
-        const exist = obstacles.findIndex(o => Math.abs(o.x - mouseX) < 30);
-        if(exist > -1) obstacles.splice(exist, 1);
-        else obstacles.push({x: mouseX, w: 30, h: 45});
+        if(index > -1) obstacles.splice(index, 1);
+        else obstacles.push({ x: mx, w: 40, h: currentTool === 'spike' ? 45 : 40, type: currentTool });
         
         customMap = [...obstacles];
-        localStorage.setItem('gameCustomMap', JSON.stringify(customMap));
-        renderEditor();
+        localStorage.setItem('game_v3_map', JSON.stringify(customMap));
+        drawEditor();
     });
 
-    function renderEditor() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawFloor();
-        obstacles.forEach(o => drawSpike(o.x, 380, o.w, o.h));
-        ctx.globalAlpha = 0.5;
-        ctx.fillStyle = player.color;
-        ctx.fillRect(player.x, player.ground, player.w, player.h);
-        ctx.globalAlpha = 1;
-    }
-
-    function drawFloor() {
+    function drawBaseLine() {
         ctx.strokeStyle = "white";
+        ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(0, 380); ctx.lineTo(canvas.width, 380); ctx.stroke();
     }
 
-    function drawSpike(x, y, w, h) {
-        ctx.fillStyle = "#ff4444";
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + w/2, y - h);
-        ctx.lineTo(x + w, y);
-        ctx.fill();
+    function drawObject(o) {
+        if(o.type === 'spike') {
+            ctx.fillStyle = "#ff4444";
+            ctx.beginPath(); ctx.moveTo(o.x, 380); ctx.lineTo(o.x + o.w/2, 335); ctx.lineTo(o.x + o.w, 380); ctx.fill();
+        } else {
+            ctx.fillStyle = "#4444ff";
+            ctx.fillRect(o.x, 340, o.w, o.h);
+            ctx.strokeStyle = "white"; ctx.strokeRect(o.x, 340, o.w, o.h);
+        }
     }
 
-    function update() {
+    function gameLoop() {
         if(!gameActive) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawFloor();
+        drawBaseLine();
 
         player.dy += player.gravity;
         player.y += player.dy;
 
+        let onSurface = false;
+        // Collisione Pavimento
         if(player.y >= player.ground) {
-            player.y = player.ground;
-            player.dy = 0;
-            player.isJumping = false;
-            player.rot = Math.round(player.rot / 90) * 90;
-        } else { player.rot += 7; }
+            player.y = player.ground; player.dy = 0; player.isJumping = false;
+            onSurface = true;
+        }
+
+        // Gestione Ostacoli e Collisioni
+        obstacles.forEach(o => {
+            o.x -= speed;
+            drawObject(o);
+
+            if(player.x + 35 > o.x && player.x < o.x + o.w - 5) {
+                if(o.type === 'spike' && player.y + 35 > 380 - o.h) {
+                    die();
+                } else if(o.type === 'block') {
+                    // Sopra il blocco
+                    if(player.y + player.h <= 348 && player.dy >= 0) {
+                        player.y = 300; player.dy = 0; player.isJumping = false; onSurface = true;
+                    } 
+                    // Contro il blocco
+                    else if(player.y + 35 > 340) {
+                        die();
+                    }
+                }
+            }
+        });
+
+        // Rotazione
+        if(!onSurface) player.rot += 8;
+        else player.rot = Math.round(player.rot / 90) * 90;
 
         ctx.save();
         ctx.translate(player.x + player.w/2, player.y + player.h/2);
@@ -181,36 +261,17 @@
         }
         ctx.restore();
 
-        for(let i = obstacles.length-1; i >= 0; i--) {
-            obstacles[i].x -= currentSpeed;
-            drawSpike(obstacles[i].x, 380, obstacles[i].w, obstacles[i].h);
-
-            if(player.x + 30 > obstacles[i].x && player.x < obstacles[i].x + obstacles[i].w - 5 && player.y + 35 > 380 - obstacles[i].h) {
-                gameActive = false;
-                alert("Game Over!");
-                exit();
-            }
-        }
-
-        if(obstacles.length > 0 && obstacles.every(o => o.x < -100)) {
-            alert("VITTORIA!");
-            exit();
-        }
-        requestAnimationFrame(update);
+        if(obstacles.length > 0 && obstacles.every(o => o.x < -100)) { alert("LIVELLO VINTO!"); quit(); }
+        requestAnimationFrame(gameLoop);
     }
 
-    function jump() {
-        if(!player.isJumping && gameActive) {
-            player.dy = player.jump;
-            player.isJumping = true;
-        }
-    }
-
-    function exit() {
-        gameActive = false;
-        editorMode = false;
+    function jump() { if(!player.isJumping && gameActive) { player.dy = player.jump; player.isJumping = true; } }
+    function die() { gameActive = false; alert("HAI PERSO!"); quit(); }
+    
+    function quit() {
+        gameActive = false; editorMode = false;
         canvas.style.display = "none";
-        menuScreen.classList.remove("hidden");
+        document.getElementById("menu-screen").classList.remove("hidden");
         document.getElementById("editor-ui").style.display = "none";
         initMenu();
     }
@@ -218,7 +279,7 @@
     window.addEventListener("keydown", (e) => {
         if(e.code === "Space") jump();
         if(e.code === "Enter" && editorMode) startLevel(-1);
-        if(e.code === "Escape") exit();
+        if(e.code === "Escape") quit();
     });
 </script>
 </body>
